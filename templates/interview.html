@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interview Session – InterviewAI</title>
+  <meta name="description" content="Live AI-powered mock interview session based on your resume." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+</head>
+<body>
+
+<div class="bg-particles"></div>
+<div class="grid-overlay"></div>
+
+<!-- Navigation -->
+<nav class="navbar">
+  <a href="/" class="nav-brand">
+    <div class="nav-logo">🤖</div>
+    <span class="nav-title">InterviewAI</span>
+  </a>
+  <div class="nav-links">
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+  </div>
+  <div style="font-size:0.8125rem; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">
+    Session #{{ interview_session.id }}
+  </div>
+</nav>
+
+<main class="page-wrapper">
+  <div class="container" style="padding-top:1.5rem; padding-bottom:3rem;">
+
+    <!-- Session data passed to JS -->
+    <div id="sessionData"
+      data-session-id="{{ interview_session.id }}"
+      data-total="{{ total_questions }}"
+      data-difficulty="{{ interview_session.difficulty }}"
+      data-candidate="{{ interview_session.resume_data.name or 'Candidate' }}"
+      style="display:none;">
+    </div>
+
+    <!-- Questions data (JSON) -->
+    <script id="questionsJson" type="application/json">
+      {{ questions | tojson }}
+    </script>
+
+    <div class="interview-layout">
+
+      <!-- ══════════════════════════════
+           LEFT: Question + Answer Panel
+           ══════════════════════════════ -->
+      <div class="question-panel">
+
+        <!-- Question Header -->
+        <div class="question-header">
+          <div class="flex items-center gap-1">
+            <span class="question-type-badge technical" id="questionTypeBadge">Technical</span>
+          </div>
+          <div class="question-counter">
+            Q <span id="questionIndexDisplay">1</span> / <span id="questionTotalDisplay">{{ total_questions }}</span>
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="question-card" id="questionCard">
+          <div class="question-number">
+            <span>❓</span> Question <span id="qNumLabel">1</span>
+          </div>
+          <div class="question-text" id="questionText">
+            Loading your personalized question...
+          </div>
+          <!-- Voice reading button -->
+          <button class="btn-icon" id="readQuestionBtn" title="Read question aloud" style="position:absolute; top:1.25rem; right:1.25rem;">
+            🔊
+          </button>
+        </div>
+
+        <!-- Follow-up Banner -->
+        <div class="followup-banner" id="followupBanner">
+          <span class="followup-icon">⚡</span>
+          <div class="followup-content">
+            <div class="followup-label">AI Follow-Up Question</div>
+            <div class="followup-text" id="followupText"></div>
+          </div>
+        </div>
+
+        <!-- Answer Section -->
+        <div class="answer-section" id="answerSection">
+          <div class="answer-label">
+            <span>Your Answer</span>
+            <div class="flex items-center gap-1">
+              <button class="btn-icon" id="voiceBtn" title="Record voice answer">🎙️</button>
+              <button class="btn-icon" id="clearBtn" title="Clear answer">🗑️</button>
+            </div>
+          </div>
+          <textarea
+            class="answer-textarea"
+            id="answerTextarea"
+            placeholder="Type your answer here, or click 🎙️ to record by voice...
+            
+Think out loud. The AI evaluates your technical depth, communication clarity, and completeness."
+          ></textarea>
+
+          <div id="voiceStatus" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.375rem; display:none;">
+            🔴 Recording... Speak now
+          </div>
+
+          <div class="answer-controls">
+            <button class="btn btn-primary" id="submitAnswerBtn">
+              Submit Answer <span>→</span>
+            </button>
+            <button class="btn btn-secondary" id="skipBtn">
+              Skip Question
+            </button>
+          </div>
+        </div>
+
+        <!-- Evaluation Card (hidden until answer submitted) -->
+        <div class="evaluation-card" id="evaluationCard">
+          <div class="eval-header">
+            <div class="eval-title">🤖 AI Evaluation</div>
+            <div class="score-badge" id="evalScoreBadge">—</div>
+          </div>
+
+          <div class="eval-section" id="strengthsSection">
+            <div class="eval-section-title green">✅ Strengths</div>
+            <ul class="eval-list strengths" id="strengthsList"></ul>
+          </div>
+
+          <div class="eval-section" id="missingSection">
+            <div class="eval-section-title red">⚠️ Areas to Improve</div>
+            <ul class="eval-list missing" id="missingList"></ul>
+          </div>
+
+          <div class="eval-section" id="improvedSection">
+            <div class="eval-section-title blue">💡 Model Answer</div>
+            <div class="improved-answer-box" id="improvedAnswer"></div>
+          </div>
+
+          <div style="margin-top:1.25rem; display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="nextQuestionBtn">
+              Next Question <span>→</span>
+            </button>
+            <button class="btn btn-success" id="finishInterviewBtn" style="display:none;">
+              🏁 Finish Interview
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════
+           RIGHT: Sidebar
+           ══════════════════════════════ -->
+      <aside class="interview-sidebar">
+
+        <!-- Timer Widget -->
+        <div class="timer-widget">
+          <div class="timer-label">⏱ Time per Question</div>
+          <div class="timer-ring" id="timerRing">
+            <svg viewBox="0 0 80 80">
+              <defs>
+                <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#7C3AED"/>
+                  <stop offset="100%" style="stop-color:#06B6D4"/>
+                </linearGradient>
+              </defs>
+              <circle class="timer-ring-bg" cx="40" cy="40" r="35"/>
+              <circle class="timer-ring-fill" id="timerRingFill" cx="40" cy="40" r="35"/>
+            </svg>
+            <div class="timer-ring-text" id="timerText">2:00</div>
+          </div>
+          <div class="flex items-center justify-between" style="margin-top:0.875rem; font-size:0.8125rem;">
+            <button class="btn btn-secondary" id="pauseTimerBtn" style="padding:0.375rem 0.875rem; font-size:0.8125rem;">⏸ Pause</button>
+            <button class="btn btn-secondary" id="resetTimerBtn" style="padding:0.375rem 0.875rem; font-size:0.8125rem;">🔄 Reset</button>
+          </div>
+        </div>
+
+        <!-- Progress Widget -->
+        <div class="progress-widget">
+          <div class="progress-widget-title">Progress</div>
+          <div class="question-dots" id="questionDots">
+            {% for q in questions %}
+            <div class="q-dot {% if loop.index == 1 %}current{% endif %}" id="dot-{{ loop.index0 }}" title="Q{{ loop.index }}: {{ q.question_type }}">
+              {{ loop.index }}
+            </div>
+            {% endfor %}
+          </div>
+          <div style="margin-top:1rem;">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="overallProgress" style="width:0%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-top:0.375rem;">
+              <span><span id="completedCount">0</span> done</span>
+              <span>{{ total_questions }} total</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session Info Widget -->
+        <div class="session-info-widget">
+          <div class="info-row">
+            <span class="info-key">Candidate</span>
+            <span class="info-val">{{ interview_session.resume_data.name or 'You' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Level</span>
+            <span class="info-val">
+              <span class="session-badge {{ interview_session.difficulty }}">{{ interview_session.difficulty|title }}</span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Questions</span>
+            <span class="info-val">{{ total_questions }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Resume</span>
+            <span class="info-val" style="font-size:0.75rem; word-break:break-all;">
+              {{ interview_session.resume_filename.rsplit('_', 1)[0] if '_' in interview_session.resume_filename else interview_session.resume_filename }}
+            </span>
+          </div>
+        </div>
+
+        <!-- End Interview Button -->
+        <button class="btn btn-danger w-full" id="endInterviewEarlyBtn" style="font-size:0.875rem;">
+          🏁 End & Get Report
+        </button>
+
+      </aside>
+    </div>
+
+  </div>
+</main>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Evaluating your answer...</div>
+  <div class="loading-subtext">Gemini AI is analyzing your response</div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  // Initialize interview page when DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    InterviewAI.initInterviewPage();
+  });
+</script>
+</body>
+</html>

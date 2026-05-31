@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InterviewAI – Resume-Based AI Interview Preparation</title>
+  <meta name="description" content="Ace your next interview with InterviewAI. Upload your resume and get personalized AI-generated interview questions evaluated by Google Gemini." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+</head>
+<body>
+
+<!-- Background Effects -->
+<div class="bg-particles"></div>
+<div class="grid-overlay"></div>
+
+<!-- Navigation -->
+<nav class="navbar">
+  <a href="/" class="nav-brand">
+    <div class="nav-logo">🤖</div>
+    <span class="nav-title">InterviewAI</span>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link active" id="nav-home">Home</a>
+    <a href="/dashboard" class="nav-link" id="nav-dashboard">Dashboard</a>
+    <a href="/history" class="nav-link" id="nav-history">History</a>
+  </div>
+  <a href="#upload" class="nav-cta">Start Interview →</a>
+</nav>
+
+<!-- Page Content -->
+<main class="page-wrapper">
+
+  <!-- ── Hero Section ── -->
+  <section class="hero">
+    <div class="container">
+
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Powered by Google Gemini AI
+      </div>
+
+      <h1 class="hero-title">
+        Crush Your Next<br />
+        <span class="hero-title-gradient">Technical Interview</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Upload your resume and our AI generates a fully personalized mock interview — 
+        tailored to your exact skills, projects, and experience level.
+      </p>
+
+      <!-- ── Upload Zone ── -->
+      <div class="upload-section" id="upload">
+        <div class="upload-zone" id="uploadZone">
+          <span class="upload-icon">📄</span>
+          <div class="upload-title">Drop your resume here</div>
+          <div class="upload-subtitle">PDF format · Max 16MB</div>
+          <button class="upload-btn" id="uploadBtn" type="button">
+            <span>📎</span> Browse Resume
+          </button>
+          <p class="upload-hint">Your resume is processed securely and never stored permanently</p>
+          <input type="file" id="resumeInput" accept=".pdf" style="display:none;" />
+        </div>
+
+        <!-- Progress -->
+        <div class="upload-progress-container" id="uploadProgress">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-label" id="progressLabel">Uploading resume...</div>
+        </div>
+
+        <!-- Skills Found -->
+        <div class="skills-found" id="skillsFound">
+          <div class="skills-label">✨ Skills detected from your resume</div>
+          <div class="skills-tags" id="skillsTags"></div>
+        </div>
+      </div>
+
+      {% if error %}
+      <div style="margin-top:1rem; padding:0.875rem 1.25rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:12px; color:#FCA5A5; font-size:0.875rem; max-width:580px; margin-left:auto; margin-right:auto;">
+        ⚠️ {{ error }}
+      </div>
+      {% endif %}
+
+    </div>
+  </section>
+
+  <!-- ── How It Works ── -->
+  <section class="features-section">
+    <div class="container">
+
+      <div class="section-header">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-title">From Resume to Ready in Minutes</h2>
+        <p class="section-subtitle">Our AI analyzes your resume and creates a real interview experience</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-title">Upload Resume</div>
+          <div class="step-desc">Drop your PDF resume. Our parser extracts all your skills, projects, and experience.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-title">AI Analysis</div>
+          <div class="step-desc">Gemini AI reads your resume and determines your level: Fresher, Intermediate, or Advanced.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-title">Live Interview</div>
+          <div class="step-desc">Answer 12 personalized questions — technical, project-based, and HR — one at a time.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <div class="step-title">Get Report</div>
+          <div class="step-desc">Receive detailed scores, strengths, gaps, improved answers, and learning recommendations.</div>
+        </div>
+      </div>
+
+      <div class="glow-divider"></div>
+
+      <!-- Features Grid -->
+      <div class="section-header">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Everything You Need to Prepare</h2>
+      </div>
+
+      <div class="features-grid">
+        <div class="glass-card">
+          <div class="feature-icon-wrap purple">🧠</div>
+          <div class="feature-title">100% Personalized</div>
+          <div class="feature-desc">Every question is generated uniquely from YOUR resume. No generic question banks.</div>
+        </div>
+        <div class="glass-card">
+          <div class="feature-icon-wrap cyan">🎯</div>
+          <div class="feature-title">Smart Difficulty</div>
+          <div class="feature-desc">AI detects if you're a fresher, intermediate, or advanced developer and adjusts accordingly.</div>
+        </div>
+        <div class="glass-card">
+          <div class="feature-icon-wrap green">⚡</div>
+          <div class="feature-title">Real-Time Evaluation</div>
+          <div class="feature-desc">Get instant AI feedback on each answer — score, strengths, gaps, and a model answer.</div>
+        </div>
+        <div class="glass-card">
+          <div class="feature-icon-wrap orange">🔗</div>
+          <div class="feature-title">Follow-Up Questions</div>
+          <div class="feature-desc">AI generates dynamic follow-ups based on what you mention in your answers.</div>
+        </div>
+        <div class="glass-card">
+          <div class="feature-icon-wrap pink">🎙️</div>
+          <div class="feature-title">Voice Mode</div>
+          <div class="feature-desc">Answer by speaking. Use Web Speech API for a real interview simulation experience.</div>
+        </div>
+        <div class="glass-card">
+          <div class="feature-icon-wrap red">📊</div>
+          <div class="feature-title">Detailed Reports</div>
+          <div class="feature-desc">Radar charts, score breakdowns, weaknesses, and curated learning recommendations.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    Built with ❤️ using <strong>Flask</strong> + <strong>Google Gemini AI</strong> · InterviewAI &copy; 2024
+  </div>
+</footer>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Analyzing your resume...</div>
+  <div class="loading-subtext" id="loadingSubtext">Gemini AI is reading your skills and generating questions</div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

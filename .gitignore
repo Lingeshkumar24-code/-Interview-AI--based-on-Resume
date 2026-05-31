@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+venv/
+env/
+.venv/
+
+# Environment variables — NEVER commit this
+.env
+
+# Database
+database.db
+
+# Uploads (user files)
+uploads/*
+!uploads/.gitkeep
+
+# Images generated at runtime
+static/images/*
+!static/images/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+.vercel/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interview History – InterviewAI</title>
+  <meta name="description" content="View all your past AI mock interview sessions and results." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+</head>
+<body>
+
+<div class="bg-particles"></div>
+<div class="grid-overlay"></div>
+
+<!-- Navigation -->
+<nav class="navbar">
+  <a href="/" class="nav-brand">
+    <div class="nav-logo">🤖</div>
+    <span class="nav-title">InterviewAI</span>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+    <a href="/history" class="nav-link active">History</a>
+  </div>
+  <a href="/" class="nav-cta">New Interview →</a>
+</nav>
+
+<main class="page-wrapper">
+  <div class="container" style="padding-top:2rem; padding-bottom:4rem;">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="flex items-center justify-between" style="flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h1 class="page-title">🗂️ Interview History</h1>
+          <p class="page-subtitle">All your past mock interview sessions</p>
+        </div>
+        <a href="/" class="btn btn-primary">
+          <span>🚀</span> New Interview
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter / Search Bar -->
+    <div class="glass-card mb-3" style="padding:1rem 1.25rem;">
+      <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <input
+          type="text"
+          id="historySearch"
+          placeholder="🔍 Search by filename..."
+          style="flex:1; min-width:200px; background:var(--bg-glass); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.5rem 1rem; color:var(--text-primary); font-family:var(--font-sans); font-size:0.875rem; outline:none; transition:var(--transition);"
+          oninput="InterviewAI.filterHistory(this.value)"
+        />
+        <select
+          id="difficultyFilter"
+          style="background:var(--bg-glass); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.5rem 1rem; color:var(--text-secondary); font-family:var(--font-sans); font-size:0.875rem; outline:none;"
+          onchange="InterviewAI.filterHistory(document.getElementById('historySearch').value)"
+        >
+          <option value="">All Levels</option>
+          <option value="fresher">Fresher</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+        <select
+          id="statusFilter"
+          style="background:var(--bg-glass); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.5rem 1rem; color:var(--text-secondary); font-family:var(--font-sans); font-size:0.875rem; outline:none;"
+          onchange="InterviewAI.filterHistory(document.getElementById('historySearch').value)"
+        >
+          <option value="">All Status</option>
+          <option value="completed">Completed</option>
+          <option value="active">Active</option>
+        </select>
+      </div>
+    </div>
+
+    {% if sessions %}
+
+    <!-- Desktop Table -->
+    <div class="history-table-wrapper" id="historyTableWrapper" style="display:none;">
+      <table class="history-table" id="historyTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Resume</th>
+            <th>Level</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sessions %}
+          <tr class="history-row"
+            data-filename="{{ s.resume_filename.lower() }}"
+            data-difficulty="{{ s.difficulty }}"
+            data-status="{{ s.status }}">
+            <td style="color:var(--text-muted); font-family:'JetBrains Mono',monospace;">#{{ s.id }}</td>
+            <td style="color:var(--text-primary); font-weight:600;">
+              📄 {{ s.resume_filename.rsplit('_', 1)[0] if '_' in s.resume_filename else s.resume_filename }}
+            </td>
+            <td><span class="session-badge {{ s.difficulty }}">{{ s.difficulty|title }}</span></td>
+            <td><span class="session-badge {{ s.status }}">{{ s.status|title }}</span></td>
+            <td>
+              {% if s.overall_score %}
+                {% set sc = s.overall_score %}
+                <span style="font-weight:800; font-family:'JetBrains Mono',monospace;
+                  color:{% if sc >= 7 %}var(--success){% elif sc >= 5 %}var(--warning){% else %}var(--danger){% endif %};">
+                  {{ sc }}/10
+                </span>
+              {% else %}
+                <span style="color:var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+            <td>{{ s.created_at[:10] }}</td>
+            <td>
+              {% if s.status == 'completed' %}
+                <a href="/result/{{ s.id }}" class="history-link">View Report →</a>
+              {% else %}
+                <a href="/interview/{{ s.id }}" class="history-link" style="color:var(--accent-light);">Continue →</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Card View (always shown, table shown on wider screens) -->
+    <div id="historyCards">
+      {% for s in sessions %}
+      {% set score = s.overall_score %}
+      {% set score_class = 'high' if score and score >= 7 else ('medium' if score and score >= 5 else ('low' if score else 'none')) %}
+      <a href="{% if s.status == 'completed' %}/result/{{ s.id }}{% else %}/interview/{{ s.id }}{% endif %}"
+         class="session-card history-row"
+         id="history-card-{{ s.id }}"
+         data-filename="{{ s.resume_filename.lower() }}"
+         data-difficulty="{{ s.difficulty }}"
+         data-status="{{ s.status }}">
+        <div class="session-score-ring {{ score_class }}">
+          {% if score %}{{ score }}{% else %}—{% endif %}
+        </div>
+        <div class="session-info">
+          <div class="session-filename">
+            📄 {{ s.resume_filename.rsplit('_', 1)[0] if '_' in s.resume_filename else s.resume_filename }}
+          </div>
+          <div class="session-meta">
+            <span class="session-badge {{ s.difficulty }}">{{ s.difficulty|title }}</span>
+            <span class="session-badge {{ s.status }}">{{ s.status|title }}</span>
+            <span class="session-date">{{ s.created_at[:10] }}</span>
+            {% if s.total_questions %}
+            <span class="session-date">{{ s.completed_questions }}/{{ s.total_questions }} questions</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="session-arrow">›</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- No Results Message -->
+    <div class="empty-state hidden" id="noResultsMsg">
+      <span class="empty-icon">🔍</span>
+      <div class="empty-title">No matches found</div>
+      <div class="empty-subtitle">Try a different search term or filter</div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+      <span class="empty-icon">📂</span>
+      <div class="empty-title">No interview history yet</div>
+      <div class="empty-subtitle">Start your first AI-powered mock interview to see results here</div>
+      <a href="/" class="btn btn-primary" style="margin-top:1rem;">Start Interview</a>
+    </div>
+    {% endif %}
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    InterviewAI &copy; 2024 · Powered by Google Gemini AI
+  </div>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    InterviewAI.initHistoryPage();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interview Report – InterviewAI</title>
+  <meta name="description" content="Your comprehensive AI interview report with scores, summary, ideal answers, GD prep, and all interview rounds." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+</head>
+<body>
+
+<div class="bg-particles"></div>
+<div class="grid-overlay"></div>
+
+<!-- Navigation -->
+<nav class="navbar">
+  <a href="/" class="nav-brand">
+    <div class="nav-logo">🤖</div>
+    <span class="nav-title">InterviewAI</span>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+    <a href="/history" class="nav-link">History</a>
+  </div>
+  <a href="/" class="nav-cta">New Interview →</a>
+</nav>
+
+<main class="page-wrapper">
+  <div class="container" style="padding-top:2rem; padding-bottom:5rem;">
+
+    <!-- Report Data for JS -->
+    <div id="reportData"
+      data-session-id="{{ interview_session.id }}"
+      data-overall="{{ report.overall_score if report else 0 }}"
+      data-technical="{{ report.technical_score if report else 0 }}"
+      data-project="{{ report.project_score if report else 0 }}"
+      data-communication="{{ report.communication_score if report else 0 }}"
+      data-confidence="{{ report.confidence_score if report else 0 }}"
+      data-hr="{{ report.hr_score if report else 0 }}"
+      style="display:none;">
+    </div>
+
+    {% if report %}
+
+    <!-- ══════════════════════════════════════════
+         SECTION 1: HERO – Overall Score
+         ══════════════════════════════════════════ -->
+    <div class="result-hero">
+      <div class="section-label">Interview Complete ✓</div>
+      <h1 class="page-title" style="margin-top:0.75rem;">Your Interview Report</h1>
+      <p style="color:var(--text-secondary); margin-top:0.375rem; font-size:0.9375rem;">
+        {{ interview_session.resume_data.name or 'Candidate' }} ·
+        <span class="session-badge {{ interview_session.difficulty }}" style="display:inline-flex;">
+          {{ interview_session.difficulty|title }}
+        </span>
+        · {{ interview_session.created_at[:10] }}
+      </p>
+
+      <!-- Overall Score Ring -->
+      <div class="overall-score-display">
+        <svg viewBox="0 0 120 120">
+          <defs>
+            <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#7C3AED"/>
+              <stop offset="100%" style="stop-color:#06B6D4"/>
+            </linearGradient>
+          </defs>
+          <circle class="score-track" cx="60" cy="60" r="52"/>
+          <circle class="score-fill" id="scoreFill" cx="60" cy="60" r="52" data-score="{{ report.overall_score }}"/>
+        </svg>
+        <div class="score-center">
+          <div class="score-number" id="overallScoreNum">{{ report.overall_score }}</div>
+          <div class="score-out-of">/10</div>
+        </div>
+      </div>
+
+      <!-- Hiring Badge -->
+      {% set score_val = report.overall_score %}
+      {% if score_val >= 8 %}
+        <div class="recommendation-badge strong-hire">🌟 Strong Hire</div>
+      {% elif score_val >= 6.5 %}
+        <div class="recommendation-badge hire">✅ Hire Recommended</div>
+      {% elif score_val >= 5 %}
+        <div class="recommendation-badge maybe">🤔 Needs Improvement</div>
+      {% else %}
+        <div class="recommendation-badge no-hire">❌ Significant Gaps Found</div>
+      {% endif %}
+
+      {% if report.overall_assessment %}
+      <p style="max-width:600px; margin:1rem auto 0; color:var(--text-secondary); font-size:0.9375rem; line-height:1.7;">
+        {{ report.overall_assessment }}
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECTION 2: SCORE BREAKDOWN
+         ══════════════════════════════════════════ -->
+    <div class="scores-grid mb-3">
+      <div class="score-card">
+        <div class="score-card-label">Technical</div>
+        <div class="score-card-value" style="color:var(--primary-light);">{{ report.technical_score }}</div>
+        <div class="score-mini-bar"><div class="score-mini-bar-fill" data-score="{{ report.technical_score }}"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-label">Projects</div>
+        <div class="score-card-value" style="color:var(--accent-light);">{{ report.project_score }}</div>
+        <div class="score-mini-bar"><div class="score-mini-bar-fill" data-score="{{ report.project_score }}"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-label">Communication</div>
+        <div class="score-card-value" style="color:var(--success);">{{ report.communication_score }}</div>
+        <div class="score-mini-bar"><div class="score-mini-bar-fill" data-score="{{ report.communication_score }}"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-label">Confidence</div>
+        <div class="score-card-value" style="color:var(--warning);">{{ report.confidence_score }}</div>
+        <div class="score-mini-bar"><div class="score-mini-bar-fill" data-score="{{ report.confidence_score }}"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-label">HR / Behavioral</div>
+        <div class="score-card-value" style="color:var(--danger-light);">{{ report.hr_score }}</div>
+        <div class="score-mini-bar"><div class="score-mini-bar-fill" data-score="{{ report.hr_score }}"></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECTION 3: CHARTS
+         ══════════════════════════════════════════ -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem;" class="chart-row">
+      <div class="chart-container">
+        <div class="chart-title">📡 Radar Overview</div>
+        <canvas id="radarChart" width="300" height="280"></canvas>
+      </div>
+      <div class="chart-container">
+        <div class="chart-title">📊 Score Breakdown</div>
+        <canvas id="barChart" width="300" height="280"></canvas>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECTION 4: HOW YOU ANSWERED – INTERVIEW SUMMARY
+         ══════════════════════════════════════════ -->
+    {% if report.interview_summary %}
+    <div class="report-section mb-3">
+      <div class="report-section-header">
+        <div class="report-section-icon purple">📝</div>
+        <div>
+          <div class="report-section-title">How You Answered This Interview</div>
+          <div class="report-section-subtitle">AI-generated analysis of your performance</div>
+        </div>
+      </div>
+      <div class="summary-block">
+        {% for paragraph in report.interview_summary.split('\n') %}
+          {% if paragraph.strip() %}
+          <p style="color:var(--text-secondary); line-height:1.75; margin-bottom:0.875rem; font-size:0.9375rem;">
+            {{ paragraph.strip() }}
+          </p>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Improvement Tips -->
+      {% if report.interview_improvement_tips %}
+      <div class="tips-grid">
+        {% for tip in report.interview_improvement_tips %}
+        <div class="tip-card">
+          <div class="tip-bullet">💡</div>
+          <div class="tip-text">{{ tip }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════
+         SECTION 5: STRENGTHS & WEAKNESSES
+         ══════════════════════════════════════════ -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem;" class="sw-row">
+      <div class="glass-card">
+        <div class="eval-section-title green" style="margin-bottom:1rem;">✅ Key Strengths</div>
+        {% if report.strengths %}
+          <ul class="eval-list strengths">
+            {% for s in report.strengths %}<li>{{ s }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <p style="color:var(--text-muted); font-size:0.875rem;">No strengths recorded.</p>
+        {% endif %}
+      </div>
+      <div class="glass-card">
+        <div class="eval-section-title red" style="margin-bottom:1rem;">⚠️ Areas to Improve</div>
+        {% if report.weaknesses %}
+          <ul class="eval-list missing">
+            {% for w in report.weaknesses %}<li>{{ w }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <p style="color:var(--text-muted); font-size:0.875rem;">No weaknesses recorded.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECTION 6: QUESTION-BY-QUESTION IMPROVEMENT GUIDE
+         ══════════════════════════════════════════ -->
+    {% if report.per_question_improvements %}
+    <div class="report-section mb-3">
+      <div class="report-section-header">
+        <div class="report-section-icon cyan">🎯</div>
+        <div>
+          <div class="report-section-title">Question-by-Question: How You Should Have Answered</div>
+          <div class="report-section-subtitle">Detailed improvement guide with ideal answers for every question</div>
+        </div>
+      </div>
+
+      {% for item in report.per_question_improvements %}
+      {% set sc = item.score %}
+      {% set sc_class = 'high' if sc >= 7 else ('medium' if sc >= 5 else 'low') %}
+      <div class="qa-improve-card" id="qi-{{ loop.index }}">
+
+        <!-- Question Header (clickable) -->
+        <div class="qa-improve-header" onclick="InterviewAI.toggleQA('qi-{{ loop.index }}')">
+          <div class="qa-score-chip {{ sc_class }}">{{ sc }}/10</div>
+          <div style="flex:1; min-width:0;">
+            <div class="qa-question-text">{{ item.question }}</div>
+            <div style="font-size:0.75rem; margin-top:0.25rem;">
+              <span class="session-badge {{ item.question_type }}">{{ item.question_type|title }}</span>
+            </div>
+          </div>
+          <div class="qa-toggle">▾</div>
+        </div>
+
+        <!-- Expanded Content -->
+        <div class="qa-improve-body">
+
+          <!-- Your Answer -->
+          <div class="qa-section-label">📣 Your Answer</div>
+          <div class="qa-answer-text">{{ item.your_answer or '(Skipped)' }}</div>
+
+          <!-- Two columns: What was good + What to improve -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;" class="qa-two-col">
+            {% if item.what_was_good %}
+            <div>
+              <div class="eval-section-title green" style="font-size:0.75rem; margin-bottom:0.5rem;">✅ What You Did Right</div>
+              <ul class="eval-list strengths">
+                {% for s in item.what_was_good %}<li>{{ s }}</li>{% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+            {% if item.what_to_improve %}
+            <div>
+              <div class="eval-section-title red" style="font-size:0.75rem; margin-bottom:0.5rem;">⚠️ What Was Missing</div>
+              <ul class="eval-list missing">
+                {% for m in item.what_to_improve %}<li>{{ m }}</li>{% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Ideal Answer -->
+          {% if item.ideal_answer %}
+          <div style="margin-top:1.25rem;">
+            <div class="ideal-answer-label">
+              <span>💡</span> How You Should Have Answered
+            </div>
+            <div class="ideal-answer-box">{{ item.ideal_answer }}</div>
+          </div>
+          {% endif %}
+
+          <!-- Key Concepts -->
+          {% if item.key_concepts %}
+          <div style="margin-top:1rem;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--accent-light); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem;">
+              📚 Key Concepts to Know
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:0.375rem;">
+              {% for c in item.key_concepts %}
+              <span class="concept-tag">{{ c }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════
+         SECTION 7: GROUP DISCUSSION ROUND
+         ══════════════════════════════════════════ -->
+    {% if report.gd_round and report.gd_round.topics %}
+    <div class="report-section mb-3">
+      <div class="report-section-header">
+        <div class="report-section-icon green">🗣️</div>
+        <div>
+          <div class="report-section-title">Group Discussion Round Preparation</div>
+          <div class="report-section-subtitle">Topics and strategies tailored to your profile</div>
+        </div>
+      </div>
+
+      <!-- What is GD + How to Win -->
+      <div class="gd-intro-grid">
+        {% if report.gd_round.what_is_gd %}
+        <div class="gd-intro-card">
+          <div style="font-size:1.5rem; margin-bottom:0.75rem;">❓</div>
+          <div style="font-size:0.875rem; font-weight:700; color:var(--text-primary); margin-bottom:0.375rem;">What is GD Round?</div>
+          <div style="font-size:0.8125rem; color:var(--text-secondary); line-height:1.65;">{{ report.gd_round.what_is_gd }}</div>
+        </div>
+        {% endif %}
+        {% if report.gd_round.how_to_win %}
+        <div class="gd-intro-card">
+          <div style="font-size:1.5rem; margin-bottom:0.75rem;">🏆</div>
+          <div style="font-size:0.875rem; font-weight:700; color:var(--text-primary); margin-bottom:0.375rem;">How to Excel</div>
+          <div style="font-size:0.8125rem; color:var(--text-secondary); line-height:1.65;">{{ report.gd_round.how_to_win }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- GD Tips -->
+      {% if report.gd_round.tips %}
+      <div class="gd-tips-row">
+        {% for tip in report.gd_round.tips %}
+        <div class="gd-tip-pill">
+          <span style="color:var(--success);">✓</span> {{ tip }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- GD Topics -->
+      <div style="font-size:0.875rem; font-weight:700; color:var(--text-primary); margin:1.5rem 0 1rem;">
+        📋 GD Topics Based on Your Profile
+      </div>
+
+      {% for topic in report.gd_round.topics %}
+      <div class="gd-topic-card">
+        <div class="gd-topic-header">
+          <div class="gd-topic-badge">{{ topic.category or 'Technology' }}</div>
+          <div class="gd-topic-title">{{ topic.topic }}</div>
+          {% if topic.why_relevant %}
+          <div class="gd-topic-relevance">🎯 {{ topic.why_relevant }}</div>
+          {% endif %}
+        </div>
+
+        <div class="gd-topic-body">
+          <!-- Opening Line -->
+          {% if topic.opening_line %}
+          <div class="gd-opening-block">
+            <div style="font-size:0.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--primary-light); margin-bottom:0.375rem;">
+              🎤 Your Opening Statement
+            </div>
+            <div style="font-size:0.9rem; color:var(--text-primary); font-style:italic; line-height:1.6;">
+              "{{ topic.opening_line }}"
+            </div>
+          </div>
+          {% endif %}
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;" class="gd-two-col">
+            <!-- Key Points -->
+            {% if topic.key_points %}
+            <div>
+              <div style="font-size:0.75rem; font-weight:700; color:var(--accent-light); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem;">
+                Key Points to Make
+              </div>
+              <ul class="eval-list" style="list-style:none;">
+                {% for pt in topic.key_points %}
+                <li style="padding-left:1.25rem; position:relative; font-size:0.8125rem; color:var(--text-secondary); margin-bottom:0.375rem;">
+                  <span style="position:absolute; left:0; color:var(--accent);">▹</span>{{ pt }}
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            <!-- Do Mention + Avoid -->
+            <div>
+              {% if topic.do_mention %}
+              <div style="font-size:0.75rem; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem;">
+                Do Mention
+              </div>
+              <ul class="eval-list strengths" style="margin-bottom:0.875rem;">
+                {% for d in topic.do_mention %}<li>{{ d }}</li>{% endfor %}
+              </ul>
+              {% endif %}
+              {% if topic.avoid_saying %}
+              <div style="font-size:0.75rem; font-weight:700; color:var(--danger); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem;">
+                Avoid Saying
+              </div>
+              <div style="font-size:0.8125rem; color:var(--text-secondary); padding-left:1rem; border-left:2px solid var(--danger); line-height:1.6;">
+                {{ topic.avoid_saying }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════
+         SECTION 8: ALL INTERVIEW ROUNDS GUIDE
+         ══════════════════════════════════════════ -->
+    {% if report.rounds_guide %}
+    <div class="report-section mb-3">
+      <div class="report-section-header">
+        <div class="report-section-icon orange">🔄</div>
+        <div>
+          <div class="report-section-title">All Interview Rounds – Preparation Guide</div>
+          <div class="report-section-subtitle">Tailored advice for every round based on your resume skills</div>
+        </div>
+      </div>
+
+      <!-- Round Tabs -->
+      <div class="rounds-tabs" id="roundsTabs">
+        {% for round in report.rounds_guide %}
+        <button class="round-tab {% if loop.first %}active{% endif %}"
+                onclick="InterviewAI.switchRound('round-{{ loop.index }}', this)"
+                id="tab-round-{{ loop.index }}">
+          {% if 'Technical' in round.round_name %}⚙️
+          {% elif 'Coding' in round.round_name or 'DSA' in round.round_name %}💻
+          {% elif 'HR' in round.round_name %}🤝
+          {% elif 'Managerial' in round.round_name or 'Manager' in round.round_name %}📋
+          {% else %}🎯{% endif %}
+          {{ round.round_name }}
+        </button>
+        {% endfor %}
+      </div>
+
+      <!-- Round Panels -->
+      {% for round in report.rounds_guide %}
+      <div class="round-panel {% if loop.first %}active{% endif %}" id="round-{{ loop.index }}">
+        <div class="round-meta-row">
+          <div class="round-meta-item">
+            <div class="round-meta-label">Duration</div>
+            <div class="round-meta-val">⏱ {{ round.duration or '45-60 min' }}</div>
+          </div>
+          <div class="round-meta-item">
+            <div class="round-meta-label">Priority</div>
+            <div class="round-meta-val">
+              <span class="session-badge {% if round.priority == 'High' %}advanced{% elif round.priority == 'Medium' %}intermediate{% else %}fresher{% endif %}">
+                {{ round.priority or 'Medium' }}
+              </span>
+            </div>
+          </div>
+          <div class="round-meta-item">
+            <div class="round-meta-label">Time to Prepare</div>
+            <div class="round-meta-val">📅 {{ round.days_to_prepare or '7 days' }}</div>
+          </div>
+        </div>
+
+        {% if round.description %}
+        <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.65; margin-bottom:1.25rem;">
+          {{ round.description }}
+        </p>
+        {% endif %}
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;" class="round-three-col">
+
+          <!-- Focus Areas -->
+          {% if round.focus_areas %}
+          <div class="round-info-block">
+            <div class="round-block-title" style="color:var(--primary-light);">🎯 Focus Areas</div>
+            <ul class="round-list">
+              {% for fa in round.focus_areas %}
+              <li>{{ fa }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Sample Questions -->
+          {% if round.sample_questions %}
+          <div class="round-info-block">
+            <div class="round-block-title" style="color:var(--accent-light);">❓ Sample Questions</div>
+            <ul class="round-list">
+              {% for sq in round.sample_questions %}
+              <li>{{ sq }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Preparation Tips -->
+          {% if round.preparation_tips %}
+          <div class="round-info-block">
+            <div class="round-block-title" style="color:var(--success);">💡 How to Prepare</div>
+            <ul class="round-list">
+              {% for pt in round.preparation_tips %}
+              <li>{{ pt }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endfor %}
+
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════
+         SECTION 9: LEARNING RECOMMENDATIONS
+         ══════════════════════════════════════════ -->
+    {% if report.recommendations %}
+    <div class="report-section mb-3">
+      <div class="report-section-header">
+        <div class="report-section-icon pink">📚</div>
+        <div>
+          <div class="report-section-title">Personalized Learning Recommendations</div>
+          <div class="report-section-subtitle">Topics to study based on your performance gaps</div>
+        </div>
+      </div>
+
+      {% for rec in report.recommendations %}
+      <div class="rec-card">
+        <div class="rec-icon">📖</div>
+        <div>
+          <div class="rec-topic">{{ rec.topic }}</div>
+          <div class="rec-reason">{{ rec.reason }}</div>
+          {% if rec.resources %}
+          <div class="rec-resources">
+            {% for r in rec.resources %}
+            <span class="rec-resource-tag">{{ r }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════
+         SECTION 10: DOWNLOAD & ACTIONS
+         ══════════════════════════════════════════ -->
+    <div class="download-section">
+      <div style="display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="InterviewAI.downloadReport()">
+          📥 Download PDF Report
+        </button>
+        <a href="/" class="btn btn-secondary">🔄 New Interview</a>
+        <a href="/dashboard" class="btn btn-secondary">📊 Dashboard</a>
+        <a href="/history" class="btn btn-secondary">🗂️ History</a>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- No Report -->
+    <div class="empty-state" style="margin-top:3rem;">
+      <span class="empty-icon">📊</span>
+      <div class="empty-title">Report Not Ready</div>
+      <div class="empty-subtitle">Complete the interview to generate your report.</div>
+      <a href="/interview/{{ interview_session.id }}" class="btn btn-primary" style="margin-top:1rem;">Continue Interview</a>
+    </div>
+    {% endif %}
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    InterviewAI &copy; 2024 · Powered by Google Gemini AI
+  </div>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    InterviewAI.initResultPage();
+  });
+</script>
+</body>
+</html>

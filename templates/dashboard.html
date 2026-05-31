@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – InterviewAI</title>
+  <meta name="description" content="Your InterviewAI dashboard — track your progress, view stats, and start a new interview." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+</head>
+<body>
+
+<div class="bg-particles"></div>
+<div class="grid-overlay"></div>
+
+<!-- Navigation -->
+<nav class="navbar">
+  <a href="/" class="nav-brand">
+    <div class="nav-logo">🤖</div>
+    <span class="nav-title">InterviewAI</span>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link" id="nav-home">Home</a>
+    <a href="/dashboard" class="nav-link active" id="nav-dashboard">Dashboard</a>
+    <a href="/history" class="nav-link" id="nav-history">History</a>
+  </div>
+  <a href="/" class="nav-cta">New Interview →</a>
+</nav>
+
+<main class="page-wrapper">
+  <div class="container">
+
+    <!-- ── Dashboard Header ── -->
+    <div class="dashboard-header">
+      <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 class="page-title">📊 Dashboard</h1>
+          <p class="page-subtitle">Your interview performance at a glance</p>
+        </div>
+        <a href="/" class="btn btn-primary" id="newInterviewBtn">
+          <span>🚀</span> Start New Interview
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Stats Grid ── -->
+    <div class="stats-grid">
+      <div class="stat-card purple">
+        <span class="stat-icon">🎯</span>
+        <div class="stat-value purple">{{ stats.total_completed }}</div>
+        <div class="stat-label">Interviews Completed</div>
+      </div>
+      <div class="stat-card cyan">
+        <span class="stat-icon">📈</span>
+        <div class="stat-value cyan">{{ stats.avg_score }}<span style="font-size:1.25rem;">/10</span></div>
+        <div class="stat-label">Average Score</div>
+      </div>
+      <div class="stat-card green">
+        <span class="stat-icon">🏆</span>
+        <div class="stat-value green">{{ stats.best_score }}<span style="font-size:1.25rem;">/10</span></div>
+        <div class="stat-label">Best Score</div>
+      </div>
+      <div class="stat-card orange">
+        <span class="stat-icon">⏳</span>
+        <div class="stat-value orange">{{ stats.active_sessions }}</div>
+        <div class="stat-label">Active Sessions</div>
+      </div>
+    </div>
+
+    <!-- ── Score Progress Bar ── -->
+    {% if stats.avg_score > 0 %}
+    <div class="glass-card mb-3">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <div class="section-heading">Average Performance</div>
+        <div style="font-size:1.25rem; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--primary-light);">
+          {{ stats.avg_score }}/10
+        </div>
+      </div>
+      <div class="progress-bar-track" style="height:10px;">
+        <div class="progress-bar-fill" id="avgScoreBar" style="width:{{ (stats.avg_score / 10 * 100)|round }}%;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:0.5rem; font-size:0.75rem; color:var(--text-muted);">
+        <span>Beginner</span><span>Intermediate</span><span>Expert</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Recent Interviews ── -->
+    <div class="section-title-bar mb-2">
+      <div class="section-heading">Recent Interviews</div>
+      <a href="/history" class="view-all-link">View all →</a>
+    </div>
+
+    {% if sessions %}
+      {% for s in sessions %}
+      {% set score = s.overall_score %}
+      {% set score_class = 'high' if score and score >= 7 else ('medium' if score and score >= 5 else ('low' if score else 'none')) %}
+      <a href="{% if s.status == 'completed' %}/result/{{ s.id }}{% else %}/interview/{{ s.id }}{% endif %}"
+         class="session-card" id="session-{{ s.id }}">
+        <div class="session-score-ring {{ score_class }}">
+          {% if score %}{{ score }}{% else %}—{% endif %}
+        </div>
+        <div class="session-info">
+          <div class="session-filename">📄 {{ s.resume_filename.rsplit('_', 1)[0] if '_' in s.resume_filename else s.resume_filename }}</div>
+          <div class="session-meta">
+            <span class="session-badge {{ s.difficulty }}">{{ s.difficulty|title }}</span>
+            <span class="session-badge {{ s.status }}">{{ s.status|title }}</span>
+            <span class="session-date">{{ s.created_at[:10] }}</span>
+          </div>
+        </div>
+        <div class="session-arrow">›</div>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state" id="emptyState">
+        <span class="empty-icon">🎯</span>
+        <div class="empty-title">No interviews yet</div>
+        <div class="empty-subtitle">Upload your resume to start your first AI mock interview</div>
+        <a href="/" class="btn btn-primary">Start First Interview</a>
+      </div>
+    {% endif %}
+
+    <!-- ── Tips Section ── -->
+    <div class="glow-divider"></div>
+    <div class="section-title-bar mb-2">
+      <div class="section-heading">💡 Interview Tips</div>
+    </div>
+    <div class="features-grid mb-4">
+      <div class="glass-card">
+        <div class="feature-icon-wrap cyan">⏱️</div>
+        <div class="feature-title">Structure Your Answers</div>
+        <div class="feature-desc">Use STAR method (Situation, Task, Action, Result) for behavioral questions.</div>
+      </div>
+      <div class="glass-card">
+        <div class="feature-icon-wrap purple">🎯</div>
+        <div class="feature-title">Be Specific</div>
+        <div class="feature-desc">Reference your actual projects and use technical terminology from your resume.</div>
+      </div>
+      <div class="glass-card">
+        <div class="feature-icon-wrap green">🔄</div>
+        <div class="feature-title">Practice Regularly</div>
+        <div class="feature-desc">Run multiple interviews. Each session builds confidence and reveals new gaps.</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    InterviewAI &copy; 2024 · Built with Flask + Google Gemini AI
+  </div>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
