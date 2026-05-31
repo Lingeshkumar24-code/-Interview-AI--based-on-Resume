@@ -1,13 +1,10 @@
 services:
   - type: web
     name: interview-ai
-    env: python
+    env: docker
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    dockerfilePath: Dockerfile
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
       - key: GEMINI_API_KEY
         sync: false
       - key: SECRET_KEY
