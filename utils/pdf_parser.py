@@ -6,6 +6,18 @@ Uses PyPDF2 to extract and clean text from uploaded resume PDFs.
 import os
 import re
 import PyPDF2
+try:
+    import fitz  # PyMuPDF
+except Exception:
+    fitz = None
+try:
+    from PIL import Image
+except Exception:
+    Image = None
+try:
+    import pytesseract
+except Exception:
+    pytesseract = None
 from werkzeug.utils import secure_filename
 
 # Allowed file extensions
@@ -73,9 +85,39 @@ def extract_text_from_pdf(filepath):
                     continue
 
         if not text_parts:
-            raise ValueError("No text could be extracted from the PDF. The file may be scanned or image-based.")
+            # Attempt OCR fallback for image-based PDFs using PyMuPDF + pytesseract
+            ocr_text_parts = []
+            if fitz is None or pytesseract is None or Image is None:
+                raise ValueError("No text could be extracted from the PDF. The file may be scanned or image-based.\n"
+                                 "OCR dependencies not available. Install `pymupdf`, `pytesseract`, and `Pillow`, and ensure Tesseract OCR is installed on the system.")
 
-        raw_text = '\n'.join(text_parts)
+            # Verify tesseract binary is available
+            try:
+                pytesseract.get_tesseract_version()
+            except Exception:
+                raise ValueError("Tesseract OCR binary not found. Please install Tesseract on the host (e.g., `apt-get install -y tesseract-ocr` on Debian/Ubuntu, or install the Windows build).")
+
+            try:
+                doc = fitz.open(filepath)
+                for page_num in range(len(doc)):
+                    page = doc.load_page(page_num)
+                    pix = page.get_pixmap(dpi=200)
+                    mode = "RGBA" if pix.alpha else "RGB"
+                    img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+                    if mode == "RGBA":
+                        img = img.convert("RGB")
+                    page_text = pytesseract.image_to_string(img)
+                    if page_text and page_text.strip():
+                        ocr_text_parts.append(page_text)
+            except Exception as e:
+                raise Exception(f"OCR processing failed: {e}")
+
+            if not ocr_text_parts:
+                raise ValueError("No text could be extracted from the PDF even after OCR. The file may be corrupted or contain unreadable images.")
+
+            raw_text = '\n'.join(ocr_text_parts)
+        else:
+            raw_text = '\n'.join(text_parts)
         cleaned_text = clean_resume_text(raw_text)
 
         return cleaned_text

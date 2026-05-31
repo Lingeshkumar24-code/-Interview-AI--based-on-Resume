@@ -158,6 +158,22 @@ Make sure `api/index.py` and `vercel.json` are committed.
 - Flask session uses a secret key for security
 - On Vercel, uploaded PDFs and SQLite data live in temporary storage only
 
+## OCR Support (scanned/image PDFs)
+
+This project now attempts OCR when PyPDF2 can't extract text (useful for scanned resumes). OCR uses `pymupdf` (PyMuPDF) to render pages and `pytesseract` to extract text.
+
+System dependency: install Tesseract OCR on the host machine.
+
+- Ubuntu / Debian (example):
+
+```bash
+sudo apt-get update && sudo apt-get install -y tesseract-ocr libtesseract-dev
+```
+
+- Windows: download and install from https://github.com/tesseract-ocr/tesseract
+
+On Render you may need to add a build step or custom Docker image that includes Tesseract. If you don't want to install Tesseract on the host, instruct users to upload text-based PDFs instead.
+
 ---
 
 ## 📊 LinkedIn Post Idea
